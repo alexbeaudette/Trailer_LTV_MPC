@@ -49,7 +49,7 @@ class QpSolver:
             l=problem.lower,
             u=problem.upper,
             verbose=False,
-            polish=True,
+            polish=False,
         )
         result = solver.solve()
         if result.x is None or result.info.status_val not in (1, 2):

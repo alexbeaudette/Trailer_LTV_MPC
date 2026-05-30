@@ -9,18 +9,18 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 from examples.demo_planner import straight_path
-from trailer_controller import TrailerLtvMpcConfig, TrailerLtvMpcController
-from trailer_controller.forward_correction import (
+from trailer_ltv_mpc import TrailerLtvMpcConfig, TrailerLtvMpcController
+from trailer_ltv_mpc.forward_correction import (
     CorrectionTarget,
     build_locked_forward_path,
     pure_pursuit_forward_step,
 )
-from trailer_controller.geometry import measurement_from_repo_state
-from trailer_controller.ltv_model import build_trailer_ltv_mpc_model
-from trailer_controller.mapping import compute_admissible_delta_T_bounds, map_virtual_to_actual
-from trailer_controller.qp_solver import build_qp_problem
-from trailer_controller.reference_builder import generate_trailer_ltv_mpc_reference
-from trailer_controller.speed_profile import apply_start_end_speed_profile
+from trailer_ltv_mpc.geometry import measurement_from_repo_state
+from trailer_ltv_mpc.ltv_model import build_trailer_ltv_mpc_model
+from trailer_ltv_mpc.mapping import compute_admissible_delta_T_bounds, map_virtual_to_actual
+from trailer_ltv_mpc.qp_solver import build_qp_problem
+from trailer_ltv_mpc.reference_builder import generate_trailer_ltv_mpc_reference
+from trailer_ltv_mpc.speed_profile import apply_start_end_speed_profile
 
 
 def check(condition, message):
@@ -76,14 +76,14 @@ def main():
 
     if importlib.util.find_spec("osqp") is not None:
         controller = TrailerLtvMpcController(config)
-        plant_state = np.array([9.739, 0.0, 0.0, 0.0, 0.0, np.pi])
+        plant_state = np.array([-9.739, 0.0, np.pi, 0.0, 0.0, np.pi])
         output = controller.step(plant_state, u_prev, -1.0, path, 0)
         check(np.isfinite(output.command.delta_f), "controller delta_f finite")
         check(np.isfinite(output.command.V2), "controller V2 finite")
     else:
         print("OSQP not installed; skipped closed-loop controller solve smoke.")
 
-    print("lean_trailer_controller smoke checks passed")
+    print("trailer_ltv_mpc smoke checks passed")
     return 0
 
 

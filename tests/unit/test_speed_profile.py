@@ -1,7 +1,7 @@
 import numpy as np
 
-from trailer_controller.config import TrailerLtvMpcConfig
-from trailer_controller.speed_profile import apply_start_end_speed_profile
+from trailer_ltv_mpc.config import TrailerLtvMpcConfig
+from trailer_ltv_mpc.speed_profile import apply_start_end_speed_profile
 
 from examples.demo_planner import straight_path
 

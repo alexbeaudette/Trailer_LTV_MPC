@@ -41,4 +41,3 @@ python examples/run_basic_cases.py
 
 Say exactly which check could not run and why. Do not imply full validation
 passed if SciPy, OSQP, or pytest were unavailable.
-

@@ -1,9 +1,9 @@
 import numpy as np
 
-from trailer_controller.config import TrailerLtvMpcConfig
-from trailer_controller.ltv_model import build_trailer_ltv_mpc_model
-from trailer_controller.qp_solver import build_qp_problem
-from trailer_controller.reference_builder import generate_trailer_ltv_mpc_reference
+from trailer_ltv_mpc.config import TrailerLtvMpcConfig
+from trailer_ltv_mpc.ltv_model import build_trailer_ltv_mpc_model
+from trailer_ltv_mpc.qp_solver import build_qp_problem
+from trailer_ltv_mpc.reference_builder import generate_trailer_ltv_mpc_reference
 
 from examples.demo_planner import straight_path
 

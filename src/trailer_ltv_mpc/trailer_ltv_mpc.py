@@ -76,7 +76,12 @@ class TrailerLtvMpcController:
         delta_T_cmd = float(u_plan[0, 0])
         V2_cmd = float(u_plan[1, 0])
         mapping = map_virtual_to_actual(
-            delta_T_cmd, measurement.gamma, V2_cmd, config.geom, config.mapping_denominator_min
+            delta_T_cmd,
+            measurement.gamma,
+            V2_cmd,
+            config.geom,
+            config.mapping_denominator_min,
+            config.delta_f_max_rad,
         )
         command = ControllerCommand(mapping.delta_f, mapping.V1, delta_T_cmd, V2_cmd)
         debug = {

@@ -20,12 +20,12 @@ old script sprawl.
 
 ## Code Organization
 
-- Controller logic lives in `src/trailer_controller/`.
+- Controller logic lives in `src/trailer_ltv_mpc/`.
 - Examples live in `examples/`.
 - Tests live in `tests/`.
 - Planner/demo code may create paths, but core controller code consumes
   `PathReference` arrays.
-- Keep plotting out of `src/trailer_controller/`.
+- Keep plotting out of `src/trailer_ltv_mpc/`.
 - Keep solver-specific details behind the `QpSolver` adapter.
 
 ## Style
@@ -36,4 +36,3 @@ old script sprawl.
   API.
 - Avoid broad rewrites unless the current module boundary is actively blocking
   correctness or readability.
-

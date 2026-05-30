@@ -6,7 +6,7 @@ This repo contains the lean Python port of the Trailer LTV MPC controller for a
 front-hitch tractor-trailer system.
 
 The main artifact is an importable Python controller library under
-`src/trailer_controller/`. Examples and tests may use scripts, but controller
+`src/trailer_ltv_mpc/`. Examples and tests may use scripts, but controller
 logic must stay separate from demos, plotting, simulation experiments, and
 validation scaffolding.
 
@@ -40,6 +40,19 @@ validation scaffolding.
 - Keep forward-correction strategy logic isolated in `forward_correction.py`.
 - Prefer explicit dataclasses and small functions over script-style modules.
 
+## Readability Rules
+
+- Keep the Python port lean. Do not add blanket fallback behavior, defensive
+  branches, auto-repair logic, or "if blank, guess this" handling unless the
+  caller contract explicitly requires it.
+- Prefer clear inputs, explicit errors, and documented assumptions over hidden
+  safety features at every function boundary.
+- Use standard Python safety only when it prevents real language-level hazards,
+  such as `default_factory` for mutable dataclass defaults.
+- Every Python module must start with a short module docstring that explains
+  what the file does at a high level. For non-Python files, add an equivalent
+  top-of-file comment when the file format supports comments.
+
 ## Python Workflow
 
 Before claiming success, run at least:
@@ -69,4 +82,3 @@ Read these before larger changes:
 - `docs/agent_docs/validation_checklist.md`
 
 Use prompts in `docs/agent_prompts/` when delegating or structuring work.
-

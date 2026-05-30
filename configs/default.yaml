@@ -1,0 +1,4 @@
+# Default controller configuration stack.
+include:
+  - vehicle.yaml
+  - controller.yaml

@@ -92,7 +92,14 @@ Both directions:
 
 ```python
 delta_f = atan2(L1*N, L1c*D)
-V1 = V2*D
+```
+
+Speed preserves the requested physical trailer speed after choosing the
+physical steering angle:
+
+```python
+speed_gain = cos(gamma) - (L1c/L1)*sin(gamma)*tan(delta_f)
+V1 = V2/speed_gain
 ```
 
 The denominator `D` must stay away from zero and `delta_f` must respect the
@@ -119,4 +126,3 @@ Ad = I + Ts*Ac
 Bd = Ts*Bc
 gd = Ts*(f(x_lin, u_lin) - Ac*x_lin - Bc*u_lin)
 ```
-

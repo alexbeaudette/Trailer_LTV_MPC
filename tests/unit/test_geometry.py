@@ -1,6 +1,6 @@
 import numpy as np
 
-from trailer_controller.geometry import Geometry, measurement_from_repo_state
+from trailer_ltv_mpc.geometry import Geometry, measurement_from_repo_state
 
 
 def test_measurement_reconstruction_front_hitch_geometry():

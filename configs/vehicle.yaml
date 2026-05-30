@@ -1,0 +1,5 @@
+# Front-hitch tractor-trailer geometry defaults.
+geom:
+  L1: 3.261
+  L1c: 0.261
+  L2: 10.0

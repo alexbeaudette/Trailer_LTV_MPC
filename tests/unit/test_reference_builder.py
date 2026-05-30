@@ -1,7 +1,7 @@
 import numpy as np
 
-from trailer_controller.config import TrailerLtvMpcConfig
-from trailer_controller.reference_builder import generate_trailer_ltv_mpc_reference
+from trailer_ltv_mpc.config import TrailerLtvMpcConfig
+from trailer_ltv_mpc.reference_builder import generate_trailer_ltv_mpc_reference
 
 from examples.demo_planner import straight_path
 

@@ -9,7 +9,7 @@ state order, or sign conventions.
 
 Rules:
 
-- Controller code belongs in `src/trailer_controller/`.
+- Controller code belongs in `src/trailer_ltv_mpc/`.
 - Examples belong in `examples/`.
 - Tests belong in `tests/`.
 - Keep solver-specific logic in `qp_solver.py`.
@@ -24,4 +24,3 @@ Required final output:
 4. Assumptions made
 5. Validation run
 6. Remaining risks
-

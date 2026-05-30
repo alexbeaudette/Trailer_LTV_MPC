@@ -1,7 +1,7 @@
 import numpy as np
 
 from demo_planner import straight_path
-from trailer_controller import TrailerLtvMpcConfig, TrailerLtvMpcController
+from trailer_ltv_mpc import TrailerLtvMpcConfig, TrailerLtvMpcController
 
 
 def main():

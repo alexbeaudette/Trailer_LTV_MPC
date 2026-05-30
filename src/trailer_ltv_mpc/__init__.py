@@ -1,4 +1,5 @@
 from .config import TrailerLtvMpcConfig
+from .config_loader import load_controller_config
 from .forward_correction import ForwardCorrectionSupervisor
 from .geometry import Geometry, Measurement
 from .path_reference import PathReference
@@ -13,4 +14,5 @@ __all__ = [
     "PathReference",
     "TrailerLtvMpcConfig",
     "TrailerLtvMpcController",
+    "load_controller_config",
 ]

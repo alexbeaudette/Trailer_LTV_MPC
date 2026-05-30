@@ -8,7 +8,7 @@ capabilities.
 
 Status: initial scaffold complete.
 
-- Package metadata and importable `src/trailer_controller/` layout.
+- Package metadata and importable `src/trailer_ltv_mpc/` layout.
 - Dataclasses for geometry, paths, config, commands, and outputs.
 - Deterministic math helpers, geometry reconstruction, mapping, speed profile,
   reference construction, LTV model, QP assembly, and pure-pursuit forward
@@ -67,4 +67,3 @@ Status: planned.
 - Stronger real-time interface.
 - Planner integration.
 - Optional visualization outside the controller core.
-

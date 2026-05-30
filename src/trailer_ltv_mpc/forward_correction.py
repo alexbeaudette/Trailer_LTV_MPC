@@ -26,6 +26,7 @@ class ForwardCorrectionState:
     target: CorrectionTarget | None = None
     forward_path: PathReference | None = None
     reverse_path: PathReference | None = None
+    reverse_u_prev: np.ndarray | None = None
     forward_search_idx: int = 0
 
 
@@ -40,8 +41,7 @@ class ForwardCorrectionSupervisor:
             measurement, reverse_reference_path, search_start_idx, self.config
         )
         forward_path = build_locked_forward_path(target, measurement, self.config)
-        reverse_path = build_locked_anchor_reverse_path(target, measurement)
-        self.state = ForwardCorrectionState(True, "forward_to_target", target, forward_path, reverse_path, 0)
+        self.state = ForwardCorrectionState(True, "forward_to_target", target, forward_path)
 
     def step(self, plant_state_explicit, u_prev, reverse_reference_path: PathReference, search_start_idx: int):
         measurement = measurement_from_explicit_state(plant_state_explicit, self.config.geom)
@@ -54,16 +54,25 @@ class ForwardCorrectionSupervisor:
             )
             self.state.forward_search_idx = output.search_start_idx
             if _forward_target_reached(measurement, self.state.target, self.config):
+                self.state.reverse_path = build_locked_anchor_reverse_path(self.state.target, measurement, self.config)
+                self.state.reverse_u_prev = np.array([0.0, -abs(self.config.V2_min_abs_mps)])
                 self.state.phase = "reverse_to_anchor"
             return output
 
+        if self.state.reverse_path is None:
+            self.state.reverse_path = build_locked_anchor_reverse_path(self.state.target, measurement, self.config)
+            self.state.reverse_u_prev = np.array([0.0, -abs(self.config.V2_min_abs_mps)])
+        reverse_u_prev = self.state.reverse_u_prev if self.state.reverse_u_prev is not None else u_prev
         output = self.controller.step(
             plant_state_explicit,
-            u_prev,
+            reverse_u_prev,
             -abs(self.config.V2_reference_mps),
             self.state.reverse_path,
             0,
         )
+        self.state.reverse_u_prev = None
+        debug = {**output.debug, "mode": "forward_correction", "phase": "reverse_to_anchor"}
+        output = ControllerOutput(output.command, debug, output.search_start_idx)
         if np.hypot(measurement.X2 - self.state.target.anchor_x_m, measurement.Y2 - self.state.target.anchor_y_m) <= abs(
             self.config.forward_correction_anchor_reached_tolerance_m
         ):
@@ -105,12 +114,11 @@ def compute_forward_correction_target(
     measurement: Measurement, reference_path: PathReference, search_start_idx: int, config: TrailerLtvMpcConfig
 ) -> CorrectionTarget:
     projection = reference_path.project(measurement.X2, measurement.Y2, search_start_idx)
-    target_station = min(
-        projection.station_m + abs(config.forward_correction_target_distance_m), reference_path.s_r[-1]
-    )
-    sample = reference_path.sample(target_station)
     anchor = reference_path.sample(projection.station_m)
-    return CorrectionTarget(sample.x, sample.y, sample.theta_ref, anchor.x, anchor.y)
+    target_distance = abs(config.forward_correction_target_distance_m)
+    target_x = anchor.x + target_distance * np.cos(anchor.theta_ref)
+    target_y = anchor.y + target_distance * np.sin(anchor.theta_ref)
+    return CorrectionTarget(target_x, target_y, anchor.theta_ref, anchor.x, anchor.y)
 
 
 def build_locked_forward_path(target: CorrectionTarget, measurement: Measurement, config: TrailerLtvMpcConfig):
@@ -138,19 +146,22 @@ def build_locked_forward_path(target: CorrectionTarget, measurement: Measurement
     )
 
 
-def build_locked_anchor_reverse_path(target: CorrectionTarget, measurement: Measurement):
+def build_locked_anchor_reverse_path(
+    target: CorrectionTarget, measurement: Measurement, config: TrailerLtvMpcConfig | None = None
+):
     sample_spacing = 0.2
     current = np.array([measurement.X2, measurement.Y2])
     anchor = np.array([target.anchor_x_m, target.anchor_y_m])
     delta = anchor - current
     distance = max(float(np.linalg.norm(delta)), sample_spacing)
     unit = delta / distance if distance > sample_spacing else np.array([np.cos(target.target_heading_rad), np.sin(target.target_heading_rad)])
-    station = np.linspace(0.0, distance, int(np.ceil(distance / sample_spacing)) + 1)
-    xy = current + np.outer(station, unit)
+    start_offset = 0.0 if config is None else abs(config.V2_profile_start_ramp_m)
+    station = np.linspace(0.0, distance + start_offset, int(np.ceil((distance + start_offset) / sample_spacing)) + 1)
+    xy = current + np.outer(station - start_offset, unit)
     return PathReference(
         xy[:, 0],
         xy[:, 1],
-        np.full_like(station, np.arctan2(unit[1], unit[0])),
+        np.full_like(station, np.arctan2(unit[1], unit[0]) + np.pi),
         station,
         -np.ones_like(station),
         tracking_point="trailer_rear_axle",

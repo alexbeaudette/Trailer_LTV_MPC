@@ -1,6 +1,6 @@
 import numpy as np
 
-from trailer_controller.path_reference import PathReference
+from trailer_ltv_mpc.path_reference import PathReference
 
 
 def straight_path(length_m=20.0, ds=0.2, direction="reverse", start_pose=(0.0, 0.0, 0.0)):

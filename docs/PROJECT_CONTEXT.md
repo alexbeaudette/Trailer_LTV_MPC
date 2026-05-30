@@ -9,8 +9,14 @@ The goal is a readable, importable controller library that preserves the
 working MATLAB controller behavior without copying the MATLAB repo's
 experiment-script sprawl.
 
-The controller core lives in `src/trailer_controller/`. It consumes
+The controller core lives in `src/trailer_ltv_mpc/`. It consumes
 precomputed `PathReference` arrays from a planner or demo layer.
+
+The import package is `trailer_ltv_mpc`. Controller and vehicle defaults can
+be loaded from YAML into `TrailerLtvMpcConfig`; path, simulation, and
+validation-case YAML files are placeholders for future scenario work. ROS2
+simulation and testing belong in a separate adapter repo that depends on this
+Python package.
 
 ## Current Scope
 
@@ -58,7 +64,7 @@ parity against MATLAB, and tighter integration tests.
 
 ## Repo Structure
 
-- `src/trailer_controller/`: importable controller package.
+- `src/trailer_ltv_mpc/`: importable controller package.
 - `examples/`: small demo planners and runnable examples.
 - `tests/`: unit tests, smoke tests, and future MATLAB parity fixtures.
 - `docs/`: project context, roadmap, cleanup plan, and agent instructions.
@@ -71,4 +77,3 @@ parity against MATLAB, and tighter integration tests.
 - Keep behavior changes separate from cleanup-only changes.
 - If a dependency is missing, say so clearly rather than implying full
   validation passed.
-

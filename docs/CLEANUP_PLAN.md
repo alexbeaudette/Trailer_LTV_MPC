@@ -32,9 +32,16 @@ Status: pending.
 
 Recommended cleanup:
 
+- Add or tighten top-of-file module docstrings so each source file immediately
+  explains its role in the controller package.
 - Review public dataclasses for naming consistency.
+- Keep dataclass defaults simple and intentional. Use `default_factory` only for
+  mutable defaults or other standard Python cases where direct defaults would be
+  incorrect.
 - Keep `ControllerOutput` and debug fields readable without bloating the public
   API.
+- Remove opportunistic fallback/auto-repair logic that hides invalid inputs
+  unless it is part of an explicitly documented controller contract.
 - Confirm zero-based indexing is clearly documented for Python.
 - Keep planner-generated arrays outside the controller core.
 
@@ -67,7 +74,6 @@ Status: pending.
 Recommended cleanup:
 
 - Keep `examples/demo_planner.py` small.
-- Do not let example planner logic drift into `src/trailer_controller/`.
+- Do not let example planner logic drift into `src/trailer_ltv_mpc/`.
 - Put future plotting or animation in examples or separate tools, not in the
   controller package.
-

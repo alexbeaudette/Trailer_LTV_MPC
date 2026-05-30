@@ -1,6 +1,6 @@
-# Lean Trailer Controller
+# Trailer LTV MPC
 
-Clean Python port of the Trailer LTV MPC controller. The package is an importable library: planner/demo code produces `PathReference` arrays, and the controller consumes those arrays.
+Python port of the Trailer LTV MPC controller and validation checks. The import package is `trailer_ltv_mpc`: planner/demo code produces `PathReference` arrays, and the controller consumes those arrays.
 
 The port preserves the MATLAB notation:
 
@@ -12,11 +12,13 @@ The port preserves the MATLAB notation:
 
 The first forward-correction strategy uses pure pursuit for the forward leg and Trailer LTV MPC for reverse-to-anchor.
 
+Controller and vehicle defaults can be loaded from YAML with `trailer_ltv_mpc.load_controller_config`. Path, simulation, and validation-case YAML files are placeholders for future scenario work. ROS2 simulation and testing should live in a separate adapter repo that depends on this Python package.
+
 ## Quick Smoke Test
 
 ```bash
 pip install -e ".[dev]"
-pytest
+python -m pytest
 python examples/run_basic_cases.py
 ```
 

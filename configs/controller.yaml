@@ -1,0 +1,79 @@
+# Trailer LTV MPC controller defaults.
+Ts: 0.05
+N: 40
+nx: 3
+nu: 2
+
+V2_reference_mps: -1.0
+V2_fixed_mps: -1.0
+V2_min_abs_mps: 0.2
+V2_max_abs_mps: 1.5
+V2_rate_max_mps2: 0.5
+
+enable_adaptive_V2_reference: true
+adaptive_V2_min_scale: 0.35
+adaptive_V2_cte_start_m: 0.2
+adaptive_V2_cte_full_m: 1.0
+adaptive_V2_heading_start_rad: 0.08726646259971647
+adaptive_V2_heading_full_rad: 0.4363323129985824
+adaptive_V2_gamma_start_rad: 0.3490658503988659
+adaptive_V2_gamma_full_rad: 0.6981317007977318
+
+enable_start_end_V2_profile: true
+V2_profile_start_ramp_m: 6.0
+V2_profile_end_ramp_m: 8.0
+V2_profile_stop_tolerance_mps: 0.05
+
+enable_forward_correction: false
+forward_correction_terminal_heading_threshold_rad: 0.2617993877991494
+forward_correction_gamma_trigger_rad: 0.8726646259971648
+forward_correction_gamma_exit_rad: 0.6108652381980153
+forward_correction_station_lookahead_m: 1.0
+forward_correction_target_distance_m: 50.0
+forward_correction_target_reached_tolerance_m: 1.0
+forward_correction_target_pass_radius_m: .nan
+forward_correction_anchor_reached_tolerance_m: 1.0
+forward_correction_method: pure_pursuit
+forward_correction_tracking_point: trailer_rear_axle
+forward_correction_path_start_offset_m: .nan
+forward_correction_path_start_offset_profile_fraction: 0.5
+forward_correction_forward_path_lookahead_m: 3.0
+forward_correction_V1_mps: 1.0
+
+delta_T_min_rad: -1.3962634015954636
+delta_T_max_rad: 1.3962634015954636
+delta_T_rate_max_radps: 1.5707963267948966
+delta_f_max_rad: 0.5235987755982988
+mapping_denominator_min: 0.001
+delta_T_bound_grid_size: 4001
+
+Q:
+  - [100.0, 0.0, 0.0]
+  - [0.0, 100.0, 0.0]
+  - [0.0, 0.0, 100.0]
+Qf:
+  - [1000.0, 0.0, 0.0]
+  - [0.0, 1000.0, 0.0]
+  - [0.0, 0.0, 1000.0]
+Q_rev:
+  - [100.0, 0.0, 0.0]
+  - [0.0, 100.0, 0.0]
+  - [0.0, 0.0, 100.0]
+Qf_rev:
+  - [1000.0, 0.0, 0.0]
+  - [0.0, 1000.0, 0.0]
+  - [0.0, 0.0, 1000.0]
+Q_fwd:
+  - [150.0, 0.0, 0.0]
+  - [0.0, 150.0, 0.0]
+  - [0.0, 0.0, 10.0]
+Qf_fwd:
+  - [200.0, 0.0, 0.0]
+  - [0.0, 200.0, 0.0]
+  - [0.0, 0.0, 10.0]
+R:
+  - [15.0, 0.0]
+  - [0.0, 80.0]
+Rd:
+  - [10.0, 0.0]
+  - [0.0, 50.0]
