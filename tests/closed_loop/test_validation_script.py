@@ -38,7 +38,29 @@ def test_script_defaults_are_usable():
 
     assert args.path in {"straight", "arc", "spline", "harsh_turn"}
     assert args.direction in {"forward", "reverse"}
-    assert result.repo_state.shape == (args.steps + 1, 4)
+    assert result.repo_state.shape[0] <= args.steps + 1
+    assert result.metadata["requested_steps"] == args.steps
+
+
+def test_run_case_stops_after_reaching_path_end():
+    args = ValidationRunOptions(
+        path="straight",
+        direction="forward",
+        steps=800,
+        ds=0.2,
+        config="configs/default.yaml",
+        save_results=False,
+        output_dir="outputs/validation",
+    )
+
+    result = run_case(args)
+
+    assert result.reached_end
+    assert result.metadata["terminated_at_path_end"]
+    assert result.metadata["requested_steps"] == args.steps
+    assert result.metadata["steps"] < args.steps
+    assert result.repo_state.shape == (result.metadata["steps"] + 1, 4)
+    assert result.delta_f.shape == (result.metadata["steps"],)
 
 
 def test_cli_does_not_write_without_save_results(tmp_path: Path):

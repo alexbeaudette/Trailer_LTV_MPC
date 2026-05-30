@@ -142,6 +142,8 @@ class ClosedLoopResult:
             "path_kind": self.metadata["path_kind"],
             "direction": self.metadata["direction"],
             "steps": int(self.metadata["steps"]),
+            "requested_steps": int(self.metadata.get("requested_steps", self.metadata["steps"])),
+            "terminated_at_path_end": bool(self.metadata.get("terminated_at_path_end", False)),
             "ds": float(self.metadata["ds"]),
             "config_source": self.metadata["config_source"],
             "path_length_m": self.path_length_m,
@@ -179,6 +181,25 @@ def run_closed_loop_path(
     steps: int = 120,
     metadata: dict | None = None,
 ) -> ClosedLoopResult:
+    result_metadata = {
+        "path_kind": "",
+        "direction": "",
+        "steps": steps,
+        "requested_steps": steps,
+        "terminated_at_path_end": False,
+        "ds": np.nan,
+        "config_source": "",
+        "end_tolerance_m": 0.5,
+        "lateral_error_tolerance_m": 0.75,
+        "heading_error_tolerance_rad": 0.75,
+        "speed_reference_tolerance_mps": 0.25,
+        "speed_active_threshold_mps": 0.15,
+    }
+    if metadata:
+        result_metadata.update(metadata)
+    requested_steps = steps
+    end_station_m = path.s_r[-1] - float(result_metadata["end_tolerance_m"])
+
     controller = TrailerLtvMpcController(config)
     forward_correction = ForwardCorrectionSupervisor(controller, config) if config.enable_forward_correction else None
     repo_state_current = initial_repo_state_from_path(path)
@@ -219,6 +240,7 @@ def run_closed_loop_path(
     correction_target_x = np.full(steps, np.nan)
     correction_target_y = np.full(steps, np.nan)
 
+    actual_steps = steps
     for idx in range(steps):
         measurement = measurement_from_repo_state(repo_state_current, config.geom)
         explicit_state = measurement.explicit_state
@@ -237,6 +259,7 @@ def run_closed_loop_path(
         hitch_x[idx] = measurement.Xh
         hitch_y[idx] = measurement.Yh
         search_indices[idx] = search_start_idx
+        reached_path_end = projection.station_m >= end_station_m
 
         use_forward_correction = forward_correction is not None and (
             forward_correction.state.active
@@ -295,59 +318,51 @@ def run_closed_loop_path(
             search_start_idx = projection.ref_idx
         else:
             search_start_idx = output.search_start_idx
+        if reached_path_end:
+            actual_steps = idx + 1
+            result_metadata["terminated_at_path_end"] = True
+            break
 
-    result_metadata = {
-        "path_kind": "",
-        "direction": "",
-        "steps": steps,
-        "ds": np.nan,
-        "config_source": "",
-        "end_tolerance_m": 0.5,
-        "lateral_error_tolerance_m": 0.75,
-        "heading_error_tolerance_rad": 0.75,
-        "speed_reference_tolerance_mps": 0.25,
-        "speed_active_threshold_mps": 0.15,
-    }
-    if metadata:
-        result_metadata.update(metadata)
+    result_metadata["steps"] = actual_steps
+    result_metadata["requested_steps"] = requested_steps
 
     return ClosedLoopResult(
-        step_idx=step_idx,
-        t_s=t_s,
-        repo_state=repo_state,
-        truck_rear_x=truck_rear_x,
-        truck_rear_y=truck_rear_y,
-        hitch_x=hitch_x,
-        hitch_y=hitch_y,
-        stations_m=stations,
-        errors_m=errors,
-        heading_errors_rad=heading_errors,
-        gamma_rad=gamma,
-        delta_f=delta_f,
-        V1=V1,
-        delta_T=delta_T,
-        delta_T_actual=delta_T_actual,
-        V2=V2,
-        V2_actual=V2_actual,
-        V2_ref=V2_ref,
-        V2_profile_ref=V2_profile_ref,
-        V2_profile_start_scale=V2_profile_start_scale,
-        V2_profile_end_scale=V2_profile_end_scale,
-        V2_profile_combined_scale=V2_profile_combined_scale,
-        solver_status=solver_status,
-        solver_iterations=solver_iterations,
-        search_start_idx=search_indices,
+        step_idx=step_idx[:actual_steps],
+        t_s=t_s[:actual_steps],
+        repo_state=repo_state[: actual_steps + 1, :],
+        truck_rear_x=truck_rear_x[:actual_steps],
+        truck_rear_y=truck_rear_y[:actual_steps],
+        hitch_x=hitch_x[:actual_steps],
+        hitch_y=hitch_y[:actual_steps],
+        stations_m=stations[:actual_steps],
+        errors_m=errors[:actual_steps],
+        heading_errors_rad=heading_errors[:actual_steps],
+        gamma_rad=gamma[:actual_steps],
+        delta_f=delta_f[:actual_steps],
+        V1=V1[:actual_steps],
+        delta_T=delta_T[:actual_steps],
+        delta_T_actual=delta_T_actual[:actual_steps],
+        V2=V2[:actual_steps],
+        V2_actual=V2_actual[:actual_steps],
+        V2_ref=V2_ref[:actual_steps],
+        V2_profile_ref=V2_profile_ref[:actual_steps],
+        V2_profile_start_scale=V2_profile_start_scale[:actual_steps],
+        V2_profile_end_scale=V2_profile_end_scale[:actual_steps],
+        V2_profile_combined_scale=V2_profile_combined_scale[:actual_steps],
+        solver_status=solver_status[:actual_steps],
+        solver_iterations=solver_iterations[:actual_steps],
+        search_start_idx=search_indices[:actual_steps],
         reference_x=path.x_r.copy(),
         reference_y=path.y_r.copy(),
         reference_theta=path.theta_r.copy(),
         reference_s=path.s_r.copy(),
         reference_direction=path.dir_r.copy(),
-        mode=mode,
-        phase=phase,
-        correction_anchor_x=correction_anchor_x,
-        correction_anchor_y=correction_anchor_y,
-        correction_target_x=correction_target_x,
-        correction_target_y=correction_target_y,
+        mode=mode[:actual_steps],
+        phase=phase[:actual_steps],
+        correction_anchor_x=correction_anchor_x[:actual_steps],
+        correction_anchor_y=correction_anchor_y[:actual_steps],
+        correction_target_x=correction_target_x[:actual_steps],
+        correction_target_y=correction_target_y[:actual_steps],
         metadata=result_metadata,
     )
 

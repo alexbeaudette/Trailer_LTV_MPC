@@ -110,7 +110,7 @@ def _format_row(case, summary, passed):
     status = "PASS" if passed else "FAIL"
     return (
         f"{case.path:8s} {case.direction:7s} {status:5s} "
-        f"{case.steps:5d} {end_text} "
+        f"{summary['steps']:5d} {end_text} "
         f"{summary['final_progress_m']:8.2f}/{summary['path_length_m']:.2f} "
         f"{summary['max_error_m']:6.3f} "
         f"{np.rad2deg(summary['max_heading_error_rad']):8.3f} "

@@ -13,9 +13,17 @@ matplotlib.use("Agg")
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 
-from trailer_ltv_mpc import load_controller_config
+from trailer_ltv_mpc import TrailerLtvMpcConfig, load_controller_config
 
-from validation.plotting import animate_tracking, plot_diagnostics, plot_path_tracking, save_figures
+from validation.plotting import (
+    animate_forward_correction_tracking,
+    animate_tracking,
+    plot_diagnostics,
+    plot_forward_correction_start_snapshot,
+    plot_path_tracking,
+    save_figures,
+)
+from validation.run_forward_correction_case import ForwardCorrectionRunOptions, run_case as run_forward_correction_case
 from validation.run_closed_loop_case import ValidationRunOptions, run_case
 
 
@@ -71,6 +79,35 @@ def test_save_figures_writes_png_files(tmp_path):
         plt.close(fig)
 
 
+def test_forward_correction_animation_can_be_constructed():
+    config = TrailerLtvMpcConfig(enable_forward_correction=True, forward_correction_gamma_trigger_rad=0.0)
+    result = _short_forward_correction_result(config)
+
+    animation = animate_forward_correction_tracking(result, config, max_frames=3)
+
+    assert isinstance(animation, FuncAnimation)
+    animation._draw_was_started = True
+    plt.close(animation._fig)
+
+
+def test_forward_correction_start_snapshot_returns_figure():
+    config = TrailerLtvMpcConfig(enable_forward_correction=True, forward_correction_gamma_trigger_rad=0.0)
+    result = _short_forward_correction_result(config)
+
+    fig = plot_forward_correction_start_snapshot(result, config)
+
+    assert fig.axes
+    plt.close(fig)
+
+
+def test_forward_correction_start_snapshot_requires_activation():
+    config = load_controller_config("configs/default.yaml")
+    result = _short_result(config)
+
+    with pytest.raises(ValueError, match="No forward-correction activation"):
+        plot_forward_correction_start_snapshot(result, config)
+
+
 def _short_result(config):
     args = ValidationRunOptions(
         path="straight",
@@ -85,3 +122,16 @@ def _short_result(config):
         output_dir="outputs/validation",
     )
     return run_case(args, config)
+
+
+def _short_forward_correction_result(config):
+    args = ForwardCorrectionRunOptions(
+        steps=4,
+        ds=0.2,
+        config="configs/default.yaml",
+        show_animation=False,
+        show_snapshot=False,
+        save_figures=False,
+        output_dir="outputs/forward_correction_validation",
+    )
+    return run_forward_correction_case(args, config)

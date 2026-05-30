@@ -22,9 +22,9 @@ from validation.path_generation import direction_sign, make_validation_path
 
 
 # Edit these defaults for quick interactive validation runs.
-PATH_TYPE = "spline"  # "straight", "arc", "spline", or "harsh_turn"
+PATH_TYPE = "harsh_turn"  # "straight", "arc", "spline", or "harsh_turn"
 DIRECTION = "reverse"  # "forward" or "reverse"
-N_STEPS = 5000
+N_STEPS = 10000
 PATH_SAMPLE_SPACING_M = 0.2
 CONFIG_PATH = "configs/default.yaml"
 SAVE_RESULTS = False
@@ -129,7 +129,10 @@ def render_visuals(result, config, args, output_dir=None):
 def print_summary(summary: dict):
     print("\nTrailer LTV MPC closed-loop validation")
     print(f"  case: {summary['path_kind']}_{summary['direction']}")
-    print(f"  steps: {summary['steps']}")
+    step_text = f"{summary['steps']}"
+    if summary["requested_steps"] != summary["steps"]:
+        step_text = f"{summary['steps']} / {summary['requested_steps']} requested"
+    print(f"  steps: {step_text}")
     print(f"  config: {summary['config_source']}")
     print(f"  path length: {summary['path_length_m']:.3f} m")
     print(

@@ -88,61 +88,53 @@ def animate_tracking(
     frames = _animation_frames(result, max_frames)
     body = _body_dimensions(config)
 
-    fig, ax = plt.subplots(num="Trailer LTV MPC Animation", figsize=(9.0, 6.0))
-    fig.patch.set_facecolor("white")
-    ax.set_facecolor("white")
-    ax.plot(
+    fig, ax = plt.subplots(num="Trailer LTV MPC Animation", figsize=(14.0, 7.0))
+    fig.patch.set_facecolor("black")
+    ax.set_facecolor("black")
+    (reference_line,) = ax.plot(
         result.reference_x,
         result.reference_y,
-        "-",
-        color=(0.0, 0.30, 0.85),
-        linewidth=2.4,
+        ":",
+        color=(0.74, 0.74, 0.74),
+        linewidth=2.8,
         label="Reference Path",
     )
-    (trace_line,) = ax.plot([], [], "-", color=(0.0, 0.45, 1.0), linewidth=2.0, label="Trailer trace")
-    (hitch_line,) = ax.plot([], [], "-", color=(0.08, 0.08, 0.08), linewidth=1.8)
-    (trailer_axle_line,) = ax.plot([], [], "-", color="black", linewidth=2.2)
-    (truck_axle_line,) = ax.plot([], [], "-", color="black", linewidth=2.2)
-    (rear_marker,) = ax.plot([], [], "o", markerfacecolor="black", markeredgecolor="black", markersize=5, label="Trailer Rear Axle")
-    (hitch_marker,) = ax.plot([], [], "o", markerfacecolor="white", markeredgecolor="black", markersize=5, markeredgewidth=1.4)
-    (truck_marker,) = ax.plot([], [], "o", markerfacecolor="black", markeredgecolor="black", markersize=5)
-    (path_marker,) = ax.plot([], [], "s", markerfacecolor="white", markeredgecolor=(0.0, 0.30, 0.85), markersize=7, markeredgewidth=2.0, label="Closest Path Point")
-    (anchor_line,) = ax.plot([], [], ":", color=(0.0, 0.65, 0.20), linewidth=2.2, label="Anchor Tangent Projection")
-    (anchor_marker,) = ax.plot([], [], "o", markerfacecolor="white", markeredgecolor="red", markersize=9, markeredgewidth=2.2, label="Correction Anchor")
-    (target_marker,) = ax.plot([], [], "o", markerfacecolor="white", markeredgecolor=(0.0, 0.65, 0.20), markersize=10, markeredgewidth=2.4, label="Correction Target")
+    (trace_line,) = ax.plot([], [], "-", color=(0.22, 0.70, 1.0), linewidth=3.0, label="Trailer Rear Axle Path")
+    (hitch_line,) = ax.plot([], [], "-", color=(0.22, 0.70, 1.0), linewidth=1.6, alpha=0.65)
+    (hitch_marker,) = ax.plot([], [], "o", markerfacecolor=(1.0, 0.82, 0.25), markeredgecolor="white", markersize=6, markeredgewidth=1.2)
     trailer_patch = plt.Polygon(
         np.zeros((4, 2)),
         closed=True,
-        facecolor=(0.62, 0.62, 0.62),
-        edgecolor=(0.05, 0.05, 0.05),
-        linewidth=1.6,
-        alpha=0.95,
+        facecolor=(0.72, 0.72, 0.72, 0.42),
+        edgecolor=(0.88, 0.88, 0.88),
+        linewidth=2.0,
         label="Trailer Body",
     )
     truck_patch = plt.Polygon(
         np.zeros((4, 2)),
         closed=True,
-        facecolor=(0.0, 0.45, 0.95),
-        edgecolor=(0.0, 0.12, 0.35),
-        linewidth=1.6,
-        alpha=0.95,
+        facecolor=(0.12, 0.72, 0.86, 0.38),
+        edgecolor=(0.44, 0.92, 1.0),
+        linewidth=2.0,
         label="Truck Body",
     )
     ax.add_patch(trailer_patch)
     ax.add_patch(truck_patch)
-    wheel_patches = [
-        plt.Circle((0.0, 0.0), 0.22, facecolor="black", edgecolor="black", zorder=6)
-        for _ in range(8)
-    ]
-    for wheel in wheel_patches:
-        ax.add_patch(wheel)
 
-    ax.set_aspect("equal", adjustable="box")
+    ax.set_aspect("equal", adjustable="datalim")
     ax.set_xlabel("X (m)")
     ax.set_ylabel("Y (m)")
-    _style_single_axis(ax)
+    _style_dark_axis(ax)
     _set_animation_limits(ax, result, body)
-    _style_legend(ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.82), borderaxespad=0.0))
+    _style_legend(
+        ax.legend(
+            handles=[truck_patch, trailer_patch, reference_line, trace_line],
+            loc="center left",
+            bbox_to_anchor=(1.01, 0.76),
+            borderaxespad=0.0,
+        )
+    )
+    fig.subplots_adjust(left=0.055, right=0.845, bottom=0.105, top=0.9)
 
     def update(frame_idx: int):
         measurement = measurement_from_repo_state(result.repo_state[frame_idx, :], config.geom)
@@ -150,19 +142,7 @@ def animate_tracking(
 
         trace_line.set_data(result.repo_state[: frame_idx + 1, 0], result.repo_state[: frame_idx + 1, 1])
         hitch_line.set_data([measurement.X1, measurement.Xh, measurement.X2], [measurement.Y1, measurement.Yh, measurement.Y2])
-        rear_marker.set_data([measurement.X2], [measurement.Y2])
         hitch_marker.set_data([measurement.Xh], [measurement.Yh])
-        truck_marker.set_data([measurement.X1], [measurement.Y1])
-        path_marker.set_data([result.reference_x[result.search_start_idx[sample_idx]]], [result.reference_y[result.search_start_idx[sample_idx]]])
-        _set_optional_marker(anchor_marker, result.correction_anchor_x[sample_idx], result.correction_anchor_y[sample_idx])
-        _set_optional_marker(target_marker, result.correction_target_x[sample_idx], result.correction_target_y[sample_idx])
-        _set_optional_line(
-            anchor_line,
-            result.correction_anchor_x[sample_idx],
-            result.correction_anchor_y[sample_idx],
-            result.correction_target_x[sample_idx],
-            result.correction_target_y[sample_idx],
-        )
         trailer_polygon = _body_polygon(
             measurement.X2,
             measurement.Y2,
@@ -181,39 +161,293 @@ def animate_tracking(
         )
         trailer_patch.set_xy(trailer_polygon)
         truck_patch.set_xy(truck_polygon)
-        _set_axle_line(trailer_axle_line, measurement.X2, measurement.Y2, measurement.psi2, body.trailer_width)
-        _set_axle_line(truck_axle_line, measurement.X1, measurement.Y1, measurement.psi1, body.truck_width)
-        _set_wheels(
-            wheel_patches,
-            [
-                *_wheel_points(measurement.X2, measurement.Y2, measurement.psi2, body.trailer_rear, 0.72 * body.trailer_front, body.trailer_width),
-                *_wheel_points(measurement.X1, measurement.Y1, measurement.psi1, body.truck_rear, 0.55 * body.truck_front, body.truck_width),
-            ],
-        )
         ax.set_title(
             f"Trailer-Only LTV MPC (FULL Plant) Vehicle and Path Tracking | t = {sample_idx * config.Ts:.1f} s",
             fontsize=14,
             fontweight="bold",
+            color="white",
         )
         return (
             trace_line,
             hitch_line,
-            trailer_axle_line,
-            truck_axle_line,
-            rear_marker,
             hitch_marker,
-            truck_marker,
-            path_marker,
-            anchor_line,
-            anchor_marker,
-            target_marker,
             trailer_patch,
             truck_patch,
-            *wheel_patches,
         )
 
     anim = animation.FuncAnimation(fig, update, frames=frames, interval=interval_ms, blit=False, repeat=False)
     return anim
+
+
+def animate_forward_correction_tracking(
+    result: ClosedLoopResult,
+    config: TrailerLtvMpcConfig,
+    *,
+    interval_ms: int = 15,
+    max_frames: int | None = 800,
+):
+    """Create a forward-correction-focused truck-trailer tracking animation."""
+    plt = _pyplot()
+    animation = _animation_module()
+    frames = _animation_frames(result, max_frames)
+    body = _body_dimensions(config)
+
+    fig, ax = plt.subplots(num="Trailer LTV MPC Forward Correction", figsize=(14.0, 7.0))
+    fig.patch.set_facecolor("black")
+    ax.set_facecolor("black")
+    (reference_line,) = ax.plot(
+        result.reference_x,
+        result.reference_y,
+        "--",
+        color=(0.70, 0.70, 0.70),
+        linewidth=2.6,
+        label="Reference Path",
+    )
+    (trace_line,) = ax.plot([], [], "-", color=(0.22, 0.70, 1.0), linewidth=3.0, label="Trailer Path")
+    (hitch_marker,) = ax.plot([], [], "x", color=(1.0, 0.82, 0.25), markersize=8, markeredgewidth=2.0)
+    (rear_marker,) = ax.plot([], [], "x", color=(0.22, 0.70, 1.0), markersize=8, markeredgewidth=2.0)
+    (anchor_line,) = ax.plot([], [], ":", color=(0.10, 0.85, 0.25), linewidth=2.5)
+    (aim_line,) = ax.plot([], [], ":", color=(0.65, 0.65, 0.65), linewidth=1.8, visible=False)
+    (anchor_marker,) = ax.plot(
+        [],
+        [],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor=(1.0, 0.10, 0.10),
+        markersize=9,
+        markeredgewidth=2.2,
+        label="Forward Correction Path Point",
+    )
+    (target_marker,) = ax.plot(
+        [],
+        [],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor=(0.0, 0.85, 0.25),
+        markersize=10,
+        markeredgewidth=2.4,
+        label="Forward Correction Target",
+    )
+    trailer_patch = plt.Polygon(
+        np.zeros((4, 2)),
+        closed=True,
+        facecolor=(0.72, 0.72, 0.72, 0.42),
+        edgecolor=(0.88, 0.88, 0.88),
+        linewidth=2.0,
+        label="Trailer Body",
+    )
+    truck_patch = plt.Polygon(
+        np.zeros((4, 2)),
+        closed=True,
+        facecolor=(0.12, 0.72, 0.86, 0.38),
+        edgecolor=(0.44, 0.92, 1.0),
+        linewidth=2.0,
+        label="Truck Body",
+    )
+    ax.add_patch(trailer_patch)
+    ax.add_patch(truck_patch)
+
+    ax.set_aspect("equal", adjustable="datalim")
+    ax.set_xlabel("X (m)")
+    ax.set_ylabel("Y (m)")
+    _style_dark_axis(ax)
+    _set_forward_correction_limits(ax, result, body)
+    _style_legend(
+        ax.legend(
+            handles=[reference_line, trace_line, trailer_patch, truck_patch, anchor_marker, target_marker],
+            loc="center left",
+            bbox_to_anchor=(1.01, 0.72),
+            borderaxespad=0.0,
+        )
+    )
+    fig.subplots_adjust(left=0.055, right=0.815, bottom=0.105, top=0.9)
+
+    def update(frame_idx: int):
+        sample_idx = min(frame_idx, result.t_s.size - 1)
+        measurement = measurement_from_repo_state(result.repo_state[frame_idx, :], config.geom)
+
+        trace_line.set_data(result.repo_state[: frame_idx + 1, 0], result.repo_state[: frame_idx + 1, 1])
+        hitch_marker.set_data([measurement.Xh], [measurement.Yh])
+        rear_marker.set_data([measurement.X2], [measurement.Y2])
+        trailer_patch.set_xy(
+            _body_polygon(
+                measurement.X2,
+                measurement.Y2,
+                measurement.psi2,
+                body.trailer_front,
+                body.trailer_rear,
+                body.trailer_width,
+            )
+        )
+        truck_patch.set_xy(
+            _body_polygon(
+                measurement.X1,
+                measurement.Y1,
+                measurement.psi1,
+                body.truck_front,
+                body.truck_rear,
+                body.truck_width,
+            )
+        )
+        _set_optional_marker(anchor_marker, result.correction_anchor_x[sample_idx], result.correction_anchor_y[sample_idx])
+        _set_optional_marker(target_marker, result.correction_target_x[sample_idx], result.correction_target_y[sample_idx])
+        _set_optional_line(
+            anchor_line,
+            result.correction_anchor_x[sample_idx],
+            result.correction_anchor_y[sample_idx],
+            result.correction_target_x[sample_idx],
+            result.correction_target_y[sample_idx],
+        )
+        _set_optional_line(
+            aim_line,
+            measurement.X1,
+            measurement.Y1,
+            result.correction_target_x[sample_idx],
+            result.correction_target_y[sample_idx],
+        )
+        phase_text = ""
+        if result.mode[sample_idx] == "forward_correction":
+            phase_text = f" | {result.phase[sample_idx]}"
+        ax.set_title(
+            f"Forward Correction Tracking | k = {int(result.step_idx[sample_idx])}{phase_text}",
+            fontsize=14,
+            fontweight="bold",
+            color="white",
+        )
+        return (
+            trace_line,
+            hitch_marker,
+            rear_marker,
+            anchor_line,
+            aim_line,
+            anchor_marker,
+            target_marker,
+            trailer_patch,
+            truck_patch,
+        )
+
+    anim = animation.FuncAnimation(fig, update, frames=frames, interval=interval_ms, blit=False, repeat=False)
+    return anim
+
+
+def plot_forward_correction_start_snapshot(
+    result: ClosedLoopResult,
+    config: TrailerLtvMpcConfig,
+    *,
+    case_title: str = "Forward Correction",
+):
+    """Plot the first sample where forward correction is active."""
+    activation_idx = _first_forward_correction_activation_idx(result)
+    plt = _pyplot()
+    body = _body_dimensions(config)
+    measurement = measurement_from_repo_state(result.repo_state[activation_idx, :], config.geom)
+    closest_x = float(np.interp(result.stations_m[activation_idx], result.reference_s, result.reference_x))
+    closest_y = float(np.interp(result.stations_m[activation_idx], result.reference_s, result.reference_y))
+
+    fig, ax = plt.subplots(num="Forward Correction Start Snapshot", figsize=(11.5, 7.0))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
+    ax.plot(
+        result.reference_x,
+        result.reference_y,
+        "-",
+        color=(0.0, 0.30, 0.85),
+        linewidth=2.8,
+        label="Reference Path",
+    )
+    trailer_patch = plt.Polygon(
+        _body_polygon(
+            measurement.X2,
+            measurement.Y2,
+            measurement.psi2,
+            body.trailer_front,
+            body.trailer_rear,
+            body.trailer_width,
+        ),
+        closed=True,
+        facecolor=(0.62, 0.62, 0.62, 0.45),
+        edgecolor=(0.20, 0.20, 0.20),
+        linewidth=1.8,
+        label="Trailer Body",
+    )
+    truck_patch = plt.Polygon(
+        _body_polygon(
+            measurement.X1,
+            measurement.Y1,
+            measurement.psi1,
+            body.truck_front,
+            body.truck_rear,
+            body.truck_width,
+        ),
+        closed=True,
+        facecolor=(0.0, 0.45, 0.95, 0.42),
+        edgecolor=(0.0, 0.18, 0.50),
+        linewidth=1.8,
+        label="Truck Body",
+    )
+    ax.add_patch(trailer_patch)
+    ax.add_patch(truck_patch)
+    ax.plot(
+        [measurement.X2],
+        [measurement.Y2],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor=(0.0, 0.30, 0.85),
+        markersize=8,
+        markeredgewidth=2.0,
+        label="Trailer Rear Axle",
+    )
+    ax.plot(
+        [closest_x],
+        [closest_y],
+        "s",
+        markerfacecolor="white",
+        markeredgecolor=(0.0, 0.30, 0.85),
+        markersize=8,
+        markeredgewidth=2.0,
+        label="Closest Path Point",
+    )
+    ax.plot(
+        [result.correction_anchor_x[activation_idx], result.correction_target_x[activation_idx]],
+        [result.correction_anchor_y[activation_idx], result.correction_target_y[activation_idx]],
+        ":",
+        color=(0.0, 0.65, 0.20),
+        linewidth=2.4,
+        label="Anchor Tangent Projection",
+    )
+    ax.plot(
+        [result.correction_anchor_x[activation_idx]],
+        [result.correction_anchor_y[activation_idx]],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor="red",
+        markersize=9,
+        markeredgewidth=2.2,
+        label="Correction Anchor",
+    )
+    ax.plot(
+        [result.correction_target_x[activation_idx]],
+        [result.correction_target_y[activation_idx]],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor=(0.0, 0.65, 0.20),
+        markersize=10,
+        markeredgewidth=2.4,
+        label="Correction Target",
+    )
+    ax.set_title(
+        f"{case_title} | row {activation_idx} | t = {result.t_s[activation_idx]:.2f} s",
+        fontsize=15,
+        fontweight="bold",
+    )
+    ax.set_xlabel("X (m)")
+    ax.set_ylabel("Y (m)")
+    ax.set_aspect("equal", adjustable="datalim")
+    _style_single_axis(ax)
+    _set_forward_correction_limits(ax, result, body)
+    _style_legend(ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.72), borderaxespad=0.0))
+    fig.tight_layout()
+    return fig
 
 
 def save_figures(figures: ValidationFigures, output_dir) -> None:
@@ -302,6 +536,17 @@ def _style_single_axis(ax) -> None:
         spine.set_linewidth(0.9)
 
 
+def _style_dark_axis(ax) -> None:
+    ax.set_facecolor("black")
+    ax.grid(True, color=(0.25, 0.25, 0.25), linewidth=1.0, alpha=0.7)
+    ax.tick_params(direction="in", top=True, right=True, colors="white")
+    ax.xaxis.label.set_color("white")
+    ax.yaxis.label.set_color("white")
+    for spine in ax.spines.values():
+        spine.set_color((0.74, 0.74, 0.74))
+        spine.set_linewidth(1.2)
+
+
 def _style_legend(legend) -> None:
     if legend is None:
         return
@@ -352,8 +597,6 @@ def _set_animation_limits(ax, result: ClosedLoopResult, body: _BodyDimensions) -
             result.repo_state[:, 0],
             result.truck_rear_x,
             result.hitch_x,
-            result.correction_anchor_x[np.isfinite(result.correction_anchor_x)],
-            result.correction_target_x[np.isfinite(result.correction_target_x)],
         ]
     )
     y_values = np.concatenate(
@@ -362,8 +605,37 @@ def _set_animation_limits(ax, result: ClosedLoopResult, body: _BodyDimensions) -
             result.repo_state[:, 1],
             result.truck_rear_y,
             result.hitch_y,
-            result.correction_anchor_y[np.isfinite(result.correction_anchor_y)],
-            result.correction_target_y[np.isfinite(result.correction_target_y)],
+        ]
+    )
+    pad_x = max(4.0, 0.08 * (np.max(x_values) - np.min(x_values)), 0.5 * body.truck_front)
+    pad_y = max(4.0, 0.08 * (np.max(y_values) - np.min(y_values)), 0.5 * body.truck_front)
+    ax.set_xlim(float(np.min(x_values) - pad_x), float(np.max(x_values) + pad_x))
+    ax.set_ylim(float(np.min(y_values) - pad_y), float(np.max(y_values) + pad_y))
+
+
+def _set_forward_correction_limits(ax, result: ClosedLoopResult, body: _BodyDimensions) -> None:
+    finite_anchor_x = result.correction_anchor_x[np.isfinite(result.correction_anchor_x)]
+    finite_anchor_y = result.correction_anchor_y[np.isfinite(result.correction_anchor_y)]
+    finite_target_x = result.correction_target_x[np.isfinite(result.correction_target_x)]
+    finite_target_y = result.correction_target_y[np.isfinite(result.correction_target_y)]
+    x_values = np.concatenate(
+        [
+            result.reference_x,
+            result.repo_state[:, 0],
+            result.truck_rear_x,
+            result.hitch_x,
+            finite_anchor_x,
+            finite_target_x,
+        ]
+    )
+    y_values = np.concatenate(
+        [
+            result.reference_y,
+            result.repo_state[:, 1],
+            result.truck_rear_y,
+            result.hitch_y,
+            finite_anchor_y,
+            finite_target_y,
         ]
     )
     pad_x = max(4.0, 0.08 * (np.max(x_values) - np.min(x_values)), 0.5 * body.truck_front)
@@ -386,30 +658,18 @@ def _set_optional_line(line, x0: float, y0: float, x1: float, y1: float) -> None
         line.set_data([], [])
 
 
-def _set_axle_line(line, x_anchor: float, y_anchor: float, heading: float, width: float) -> None:
-    lateral = np.array([-np.sin(heading), np.cos(heading)])
-    center = np.array([x_anchor, y_anchor], dtype=float)
-    half_width = 0.56 * width
-    ends = np.vstack([center - half_width * lateral, center + half_width * lateral])
-    line.set_data(ends[:, 0], ends[:, 1])
-
-
-def _wheel_points(x_anchor: float, y_anchor: float, heading: float, rear: float, front: float, width: float) -> list[np.ndarray]:
-    longitudinal = np.array([np.cos(heading), np.sin(heading)])
-    lateral = np.array([-np.sin(heading), np.cos(heading)])
-    anchor = np.array([x_anchor, y_anchor], dtype=float)
-    half_width = 0.56 * width
-    axle_offsets = (-rear, front)
-    return [
-        anchor + axle_offset * longitudinal + side * half_width * lateral
-        for axle_offset in axle_offsets
-        for side in (-1.0, 1.0)
-    ]
-
-
-def _set_wheels(wheels, points: list[np.ndarray]) -> None:
-    for wheel, point in zip(wheels, points):
-        wheel.center = (float(point[0]), float(point[1]))
+def _first_forward_correction_activation_idx(result: ClosedLoopResult) -> int:
+    active = (
+        (result.mode == "forward_correction")
+        & np.isfinite(result.correction_anchor_x)
+        & np.isfinite(result.correction_anchor_y)
+        & np.isfinite(result.correction_target_x)
+        & np.isfinite(result.correction_target_y)
+    )
+    indices = np.flatnonzero(active)
+    if not indices.size:
+        raise ValueError("No forward-correction activation with finite anchor and target data was found.")
+    return int(indices[0])
 
 
 def _body_polygon(x_anchor: float, y_anchor: float, heading: float, front: float, rear: float, width: float) -> np.ndarray:
