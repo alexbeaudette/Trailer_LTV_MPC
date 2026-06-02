@@ -90,6 +90,19 @@ def test_forward_correction_animation_can_be_constructed():
     plt.close(animation._fig)
 
 
+def test_closed_loop_animation_shows_forward_correction_endpoints():
+    config = TrailerLtvMpcConfig(enable_forward_correction=True, forward_correction_gamma_trigger_rad=0.0)
+    result = _short_forward_correction_result(config)
+
+    animation = animate_tracking(result, config, max_frames=3)
+
+    legend_labels = [text.get_text() for text in animation._fig.axes[0].get_legend().get_texts()]
+    assert "Forward correction path point" in legend_labels
+    assert "Forward correction target" in legend_labels
+    animation._draw_was_started = True
+    plt.close(animation._fig)
+
+
 def test_forward_correction_start_snapshot_returns_figure():
     config = TrailerLtvMpcConfig(enable_forward_correction=True, forward_correction_gamma_trigger_rad=0.0)
     result = _short_forward_correction_result(config)

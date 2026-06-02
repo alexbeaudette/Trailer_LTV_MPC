@@ -102,6 +102,27 @@ def animate_tracking(
     (trace_line,) = ax.plot([], [], "-", color=(0.22, 0.70, 1.0), linewidth=3.0, label="Trailer Rear Axle Path")
     (hitch_line,) = ax.plot([], [], "-", color=(0.22, 0.70, 1.0), linewidth=1.6, alpha=0.65)
     (hitch_marker,) = ax.plot([], [], "o", markerfacecolor=(1.0, 0.82, 0.25), markeredgecolor="white", markersize=6, markeredgewidth=1.2)
+    (correction_line,) = ax.plot([], [], ":", color=(0.10, 0.85, 0.25), linewidth=2.5)
+    (correction_anchor_marker,) = ax.plot(
+        [],
+        [],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor=(1.0, 0.10, 0.10),
+        markersize=9,
+        markeredgewidth=2.2,
+        label="Forward correction path point",
+    )
+    (correction_target_marker,) = ax.plot(
+        [],
+        [],
+        "o",
+        markerfacecolor="white",
+        markeredgecolor=(0.0, 0.85, 0.25),
+        markersize=10,
+        markeredgewidth=2.4,
+        label="Forward correction target",
+    )
     trailer_patch = plt.Polygon(
         np.zeros((4, 2)),
         closed=True,
@@ -125,10 +146,13 @@ def animate_tracking(
     ax.set_xlabel("X (m)")
     ax.set_ylabel("Y (m)")
     _style_dark_axis(ax)
-    _set_animation_limits(ax, result, body)
+    _set_forward_correction_limits(ax, result, body)
+    legend_handles = [reference_line, trace_line, trailer_patch, truck_patch]
+    if _has_forward_correction_points(result):
+        legend_handles.extend([correction_anchor_marker, correction_target_marker])
     _style_legend(
         ax.legend(
-            handles=[truck_patch, trailer_patch, reference_line, trace_line],
+            handles=legend_handles,
             loc="center left",
             bbox_to_anchor=(1.01, 0.76),
             borderaxespad=0.0,
@@ -143,6 +167,23 @@ def animate_tracking(
         trace_line.set_data(result.repo_state[: frame_idx + 1, 0], result.repo_state[: frame_idx + 1, 1])
         hitch_line.set_data([measurement.X1, measurement.Xh, measurement.X2], [measurement.Y1, measurement.Yh, measurement.Y2])
         hitch_marker.set_data([measurement.Xh], [measurement.Yh])
+        _set_optional_marker(
+            correction_anchor_marker,
+            result.correction_anchor_x[sample_idx],
+            result.correction_anchor_y[sample_idx],
+        )
+        _set_optional_marker(
+            correction_target_marker,
+            result.correction_target_x[sample_idx],
+            result.correction_target_y[sample_idx],
+        )
+        _set_optional_line(
+            correction_line,
+            result.correction_anchor_x[sample_idx],
+            result.correction_anchor_y[sample_idx],
+            result.correction_target_x[sample_idx],
+            result.correction_target_y[sample_idx],
+        )
         trailer_polygon = _body_polygon(
             measurement.X2,
             measurement.Y2,
@@ -171,6 +212,9 @@ def animate_tracking(
             trace_line,
             hitch_line,
             hitch_marker,
+            correction_line,
+            correction_anchor_marker,
+            correction_target_marker,
             trailer_patch,
             truck_patch,
         )
@@ -590,29 +634,6 @@ def _body_dimensions(config: TrailerLtvMpcConfig) -> _BodyDimensions:
     )
 
 
-def _set_animation_limits(ax, result: ClosedLoopResult, body: _BodyDimensions) -> None:
-    x_values = np.concatenate(
-        [
-            result.reference_x,
-            result.repo_state[:, 0],
-            result.truck_rear_x,
-            result.hitch_x,
-        ]
-    )
-    y_values = np.concatenate(
-        [
-            result.reference_y,
-            result.repo_state[:, 1],
-            result.truck_rear_y,
-            result.hitch_y,
-        ]
-    )
-    pad_x = max(4.0, 0.08 * (np.max(x_values) - np.min(x_values)), 0.5 * body.truck_front)
-    pad_y = max(4.0, 0.08 * (np.max(y_values) - np.min(y_values)), 0.5 * body.truck_front)
-    ax.set_xlim(float(np.min(x_values) - pad_x), float(np.max(x_values) + pad_x))
-    ax.set_ylim(float(np.min(y_values) - pad_y), float(np.max(y_values) + pad_y))
-
-
 def _set_forward_correction_limits(ax, result: ClosedLoopResult, body: _BodyDimensions) -> None:
     finite_anchor_x = result.correction_anchor_x[np.isfinite(result.correction_anchor_x)]
     finite_anchor_y = result.correction_anchor_y[np.isfinite(result.correction_anchor_y)]
@@ -656,6 +677,17 @@ def _set_optional_line(line, x0: float, y0: float, x1: float, y1: float) -> None
         line.set_data([x0, x1], [y0, y1])
     else:
         line.set_data([], [])
+
+
+def _has_forward_correction_points(result: ClosedLoopResult) -> bool:
+    return bool(
+        np.any(
+            np.isfinite(result.correction_anchor_x)
+            & np.isfinite(result.correction_anchor_y)
+            & np.isfinite(result.correction_target_x)
+            & np.isfinite(result.correction_target_y)
+        )
+    )
 
 
 def _first_forward_correction_activation_idx(result: ClosedLoopResult) -> int:
