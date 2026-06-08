@@ -36,7 +36,7 @@ def test_script_defaults_are_usable():
 
     result = run_case(args)
 
-    assert args.path in {"straight", "arc", "spline", "harsh_turn"}
+    assert args.path in {"straight", "arc", "sinusoid", "spline", "harsh_turn"}
     assert args.direction in {"forward", "reverse"}
     assert result.repo_state.shape[0] <= args.steps + 1
     assert result.metadata["requested_steps"] == args.steps

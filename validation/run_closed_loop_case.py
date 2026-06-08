@@ -22,9 +22,9 @@ from validation.path_generation import direction_sign, make_validation_path
 
 
 # Edit these defaults for quick interactive validation runs.
-PATH_TYPE = "harsh_turn"  # "straight", "arc", "spline", or "harsh_turn"
-DIRECTION = "reverse"  # "forward" or "reverse"
-N_STEPS = 10000
+PATH_TYPE = "sinusoid"  # "straight", "arc", "sinusoid", "spline", or "harsh_turn"
+DIRECTION = "forward"  # "forward" or "reverse"
+N_STEPS = 400
 PATH_SAMPLE_SPACING_M = 0.2
 CONFIG_PATH = "configs/default.yaml"
 SAVE_RESULTS = False
@@ -72,7 +72,7 @@ def main(argv=None) -> int:
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--path", choices=["straight", "arc", "spline", "harsh_turn"], default=PATH_TYPE)
+    parser.add_argument("--path", choices=["straight", "arc", "sinusoid", "spline", "harsh_turn"], default=PATH_TYPE)
     parser.add_argument("--direction", choices=["forward", "reverse"], default=DIRECTION)
     parser.add_argument("--steps", type=int, default=N_STEPS)
     parser.add_argument("--ds", type=float, default=PATH_SAMPLE_SPACING_M)

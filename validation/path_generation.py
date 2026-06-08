@@ -12,6 +12,8 @@ def make_validation_path(kind: str, direction: str, ds: float = 0.2) -> PathRefe
         return _straight_path(sign, ds)
     if kind == "arc":
         return _arc_path(sign, ds)
+    if kind == "sinusoid":
+        return _sinusoid_path(sign, ds)
     if kind == "spline":
         return _spline_path(sign, ds)
     if kind == "harsh_turn":
@@ -46,6 +48,29 @@ def _arc_path(sign: float, ds: float) -> PathReference:
     x = radius_m * np.sin(phi)
     y = radius_m * (1.0 - np.cos(phi))
     tangent = phi
+    return _path_from_tangent(x, y, station, tangent, sign)
+
+
+def _sinusoid_path(sign: float, ds: float) -> PathReference:
+    length_m = 120.0
+    amplitude_m = 6.0
+    wavelength_m = 45.0
+    start_pose = np.array([0.0, 0.0, 0.0], dtype=float)
+
+    x_local = _sample_station(length_m, ds)
+    y_local = amplitude_m * np.sin(2.0 * np.pi * x_local / wavelength_m)
+    rotation = np.array(
+        [
+            [np.cos(start_pose[2]), -np.sin(start_pose[2])],
+            [np.sin(start_pose[2]), np.cos(start_pose[2])],
+        ],
+        dtype=float,
+    )
+    xy = rotation @ np.vstack([x_local, y_local])
+    x = start_pose[0] + xy[0, :]
+    y = start_pose[1] + xy[1, :]
+    station = _station_from_xy(x, y)
+    tangent = _tangent_from_xy(x, y)
     return _path_from_tangent(x, y, station, tangent, sign)
 
 

@@ -75,7 +75,12 @@ def main(argv=None) -> int:
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--paths", nargs="+", choices=["straight", "arc", "spline", "harsh_turn"], default=list(PATH_TYPES))
+    parser.add_argument(
+        "--paths",
+        nargs="+",
+        choices=["straight", "arc", "sinusoid", "spline", "harsh_turn"],
+        default=list(PATH_TYPES),
+    )
     parser.add_argument("--directions", nargs="+", choices=["forward", "reverse"], default=list(DIRECTIONS))
     parser.add_argument("--steps", type=int, default=None, help="Override automatically sized step counts.")
     parser.add_argument("--ds", type=float, default=PATH_SAMPLE_SPACING_M)
